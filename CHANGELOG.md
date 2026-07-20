@@ -27,3 +27,10 @@ The project follows a lightweight chronological changelog during early developme
   finish-time display, a static bottom progression placeholder, and continuous autoplay.
 - Shared pure-C# `RaceKinematics.DistanceAtTime` helper (with Edit Mode tests) so the
   visual layer derives car positions from the same kinematic model as the simulator.
+- First playable incremental core loop v0.1C (`IdleRacer.Game.Domain`): data-driven Normal
+  1-1..1-10 campaign, central Economy (Gold/Wheels) with transaction reasons, eight
+  equipment slots, seeded item generation with data-driven rarity tables, Item Creator
+  level/XP progression, equipment-driven player stats, and Auto Build unlock after Normal
+  1-10 (pauses on unresolved items). Progression UI added to the RacePrototype scene.
+- Edit Mode tests for the incremental loop (campaign, economy, item generation, equipment,
+  Item Creator, Auto Build).

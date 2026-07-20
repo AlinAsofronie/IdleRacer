@@ -4,7 +4,8 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "IdleRacer.Racing.Simulation"
+        "IdleRacer.Racing.Simulation",
+        "IdleRacer.Game.Domain"
     ],
     "includePlatforms": [
         "Editor"

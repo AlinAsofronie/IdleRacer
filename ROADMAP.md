@@ -46,6 +46,14 @@ Not included:
 - refinement
 - advanced tracks
 
+Status:
+
+- 0.1A Headless race simulator — COMPLETED
+- 0.1B Visual race prototype — COMPLETED
+- 0.1C First playable incremental loop (Normal 1-1..1-10, Gold, Wheels, Item Creator,
+  8 equipment slots, rarities, Item Creator levels, Auto Build unlock) — IN PROGRESS
+  (local save deferred to a later milestone)
+
 ---
 
 ## Milestone 0.2 — Campaign Foundation

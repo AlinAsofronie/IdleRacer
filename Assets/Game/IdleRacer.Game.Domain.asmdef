@@ -1,11 +1,8 @@
 {
-    "name": "IdleRacer.Racing.Visuals",
-    "rootNamespace": "IdleRacer.Racing.Visuals",
+    "name": "IdleRacer.Game.Domain",
+    "rootNamespace": "IdleRacer.Game",
     "references": [
-        "IdleRacer.Racing.Simulation",
-        "IdleRacer.Game.Domain",
-        "UnityEngine.UI",
-        "Unity.InputSystem"
+        "IdleRacer.Racing.Simulation"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -15,5 +12,5 @@
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],
-    "noEngineReferences": false
+    "noEngineReferences": true
 }

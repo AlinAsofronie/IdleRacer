@@ -534,3 +534,66 @@ result, and restarts in a continuous loop with no user input.
 - prototype-only race values (not game balance);
 - no input, economy, progression, equipment, skills, or audio;
 - bottom panel is a static placeholder (no real progression UI yet).
+
+---
+
+## Incremental Core Loop v0.1C
+
+The first playable loop. All game logic is pure C# in the `IdleRacer.Game.Domain` assembly
+(`noEngineReferences`), composed by `GameController`. The presentation layer
+(`IdleRacer.Racing.Visuals`) only orchestrates timing, race playback, and UI wiring, and
+holds no game logic or currency mutation.
+
+### Campaign flow
+
+Data-driven via `StageDefinition` / `CampaignDefinition` (v0.1C ships Normal 1-1 .. 1-10 in
+`GameConfig`). `CampaignService` owns the rules: `GameController.PrepareRace()` builds a
+`RaceSimulationRequest` from the player's calculated stats and the current stage's opponent,
+runs the authoritative `RaceSimulator`, and returns a `RacePlan`. After visual playback,
+`GameController.ResolveRace(plan)` calls `CampaignService.ApplyRaceResult(playerWon)`: a win
+grants the stage's Gold/Wheels and advances (staying on 1-10 to keep it repeatable and
+unlocking Auto Build); a loss/draw grants nothing and retries the same stage.
+
+### Economy flow
+
+`IEconomyService` / `EconomyService` is the single place currencies change; every change
+records a `TransactionReason`. UI never mutates balances. Gold accumulates (no sinks yet);
+Wheels are spent by the Item Creator (1 per item).
+
+### Item generation
+
+`ItemGenerator` samples a data-driven `RarityTable` and `RarityStatTable` with a supplied
+`System.Random` (deterministic per seed) to produce an immutable `EquipmentItem` (id, slot,
+rarity, flat Accel/Top bonuses). Displayed odds are the exact table used to generate.
+
+### Equipment stat calculation
+
+`PlayerStatsCalculator`: Final = Base player stats + sum of equipped item flat bonuses →
+`CarRaceStats`. `EquipmentLoadout` holds one item per slot; equipping only ever affects that
+slot. Equipment changes are reflected in the next race automatically.
+
+### Item Creator progression
+
+`ItemCreator` tracks Level and XP against `ItemCreatorConfig` (prototype: 3 levels). Each
+generated item grants 1 XP; reaching the level threshold activates a different (better)
+rarity table. All values are configuration-driven.
+
+### Auto Build unlock
+
+Locked until Normal 1-10 is beaten (`CampaignService`). Once unlocked, `GameController`'s
+Auto Build runs the exact same generation path/odds as manual build, costs 1 Wheel per item,
+stops at zero Wheels, and pauses while an unresolved pending item awaits EQUIP/DISCARD (so
+items are never silently destroyed).
+
+### Serialisable-friendly state
+
+Player state (economy balances, campaign index + Auto Build flag, loadout, creator level/XP)
+lives in the domain services, not scattered across MonoBehaviours; `GameController` accepts an
+optional starting `CampaignState`, anticipating save/load in a later milestone.
+
+### Known limitations (v0.1C)
+
+- Normal 1 only (no Normal 2/3, Hard, Hell); no Gold sinks/slot upgrades;
+- no inventory (pending item is single-slot; DISCARD removes permanently);
+- no persistence yet; progression UI is code-built (prefab migration deferred);
+- prototype rarity/stat/stage values are not final balance.
