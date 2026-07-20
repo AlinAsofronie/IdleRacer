@@ -417,3 +417,71 @@ Target:
 - low battery impact,
 - low thermal load,
 - scalable visual effects.
+
+---
+
+## Race Simulation v0.1
+
+The first implemented slice of the authoritative race simulator. It lives in
+`Assets/Game/Racing/Simulation/` as a dedicated pure-C# assembly
+(`IdleRacer.Racing.Simulation`, `noEngineReferences: true`) and does not reference
+UnityEngine.
+
+### Units
+
+- distance: metres (m)
+- speed: metres per second (m/s)
+- acceleration: metres per second squared (m/s^2)
+- time: seconds (s)
+
+Internally the simulator uses `double` for precision and deterministic results.
+
+### Supported stats (v0.1)
+
+Each car (`CarRaceStats`) currently has only:
+
+- Acceleration (m/s^2)
+- TopSpeed (m/s)
+
+A race (`RaceSimulationRequest`) currently has only:
+
+- PlayerStats, OpponentStats
+- TrackDistance (m)
+- FixedTimeStep (s)
+
+The outcome (`RaceSimulationResult`) reports Winner (`RaceWinner`: Player / Opponent /
+Draw), PlayerFinishTime, OpponentFinishTime, and VictoryMarginSeconds.
+
+### Deterministic fixed-timestep approach
+
+Each car is simulated independently. Both start from rest at distance 0 and accelerate at
+their constant Acceleration, clamped so speed never exceeds TopSpeed, until they reach
+TrackDistance. The simulation advances in fixed `FixedTimeStep` steps. There is no
+randomness, so identical inputs always produce identical results. A large iteration guard
+protects against accidental infinite loops from invalid input.
+
+### Finish-line interpolation
+
+Finish times are not rounded up to the end of a timestep. Within each step the motion is
+integrated in closed form: a constant-acceleration phase followed (if TopSpeed is reached
+mid-step) by a constant-speed cruise phase. When the finish line falls inside a step, the
+exact crossing instant is solved directly — the quadratic `0.5*a*tau^2 + v*tau - remaining = 0`
+during acceleration, or `remaining / TopSpeed` while cruising. This makes finish times
+effectively independent of the chosen FixedTimeStep.
+
+### Separation from Unity visuals
+
+The simulator is authoritative and self-contained. It has no dependency on GameObject,
+Transform, Rigidbody, physics, animation, cameras, particle systems, or UI. Future race
+visuals will only display the `RaceSimulationResult`; visuals never determine the winner.
+
+### Known limitations (v0.1)
+
+- straight tracks only;
+- no corners;
+- no nitrous;
+- no skills;
+- no gear shifting;
+- no random events;
+- no equipment modifiers;
+- starts from rest only.

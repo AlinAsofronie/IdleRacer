@@ -16,3 +16,8 @@ The project follows a lightweight chronological changelog during early developme
 - Development roadmap.
 - Save schema planning.
 - Cursor project rules.
+- MCP tooling: Unity MCP (MCP for Unity) and Context7 integration.
+- Headless race simulation v0.1: deterministic, pure-C# two-car straight-track simulator
+  (Acceleration and TopSpeed) with fixed-timestep stepping and analytic finish-line
+  interpolation, in `IdleRacer.Racing.Simulation`.
+- Edit Mode tests for the race simulation (`IdleRacer.Racing.Tests.EditMode`).
