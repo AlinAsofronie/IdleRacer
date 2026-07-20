@@ -10,10 +10,10 @@ using IdleRacer.Game.Equipment.Rarities;
 namespace IdleRacer.Racing.Visuals
 {
     /// <summary>
-    /// Builds and updates the bottom progression UI (v0.1C). This is presentation only: it reads
-    /// state from <see cref="GameController"/> and forwards button presses via callbacks; it holds
-    /// no game logic. UI is built in code but encapsulated here (separate from the race controller);
-    /// migration to authored prefabs is a later refinement.
+    /// Builds and updates the bottom progression UI (v0.1D): currencies, Item Creator, pending
+    /// item, and the eight equipment slots with permanent slot levels + Gold upgrade buttons.
+    /// Presentation only: it reads <see cref="GameController"/> and forwards button presses via
+    /// callbacks; it holds no game logic and never mutates currency or levels directly.
     /// </summary>
     public sealed class ProgressionUiView
     {
@@ -21,6 +21,7 @@ namespace IdleRacer.Racing.Visuals
             (EquipmentSlotType[])Enum.GetValues(typeof(EquipmentSlotType));
 
         private readonly Font _font;
+        private readonly Action<EquipmentSlotType> _onUpgradeSlot;
 
         private Text _stageText;
         private Text _goldText;
@@ -35,11 +36,20 @@ namespace IdleRacer.Racing.Visuals
         private GameObject _pendingPanel;
         private Text _pendingText;
 
-        private readonly Text[] _slotTexts = new Text[8];
+        private readonly Text[] _slotInfoTexts = new Text[8];
+        private readonly Button[] _slotUpgradeButtons = new Button[8];
+        private readonly Text[] _slotUpgradeLabels = new Text[8];
 
-        public ProgressionUiView(RectTransform panel, Action onBuild, Action onToggleAuto, Action onEquip, Action onDiscard)
+        public ProgressionUiView(
+            RectTransform panel,
+            Action onBuild,
+            Action onToggleAuto,
+            Action onEquip,
+            Action onDiscard,
+            Action<EquipmentSlotType> onUpgradeSlot)
         {
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            _onUpgradeSlot = onUpgradeSlot;
             BuildContent(panel, onBuild, onToggleAuto, onEquip, onDiscard);
         }
 
@@ -68,8 +78,21 @@ namespace IdleRacer.Racing.Visuals
             AddText(content, "EquipmentHeader", 30, TextAnchor.MiddleLeft, new Color(0.8f, 0.8f, 0.85f), 38).text = "EQUIPMENT";
             for (int i = 0; i < Slots.Length; i++)
             {
-                _slotTexts[i] = AddText(content, "Slot_" + Slots[i], 26, TextAnchor.MiddleLeft, Color.white, 34);
+                BuildSlotRow(content, i, Slots[i]);
             }
+        }
+
+        private void BuildSlotRow(RectTransform content, int index, EquipmentSlotType slot)
+        {
+            RectTransform row = AddRow(content, "SlotRow_" + slot, 120);
+            _slotInfoTexts[index] = AddText(row, "SlotInfo_" + slot, 25, TextAnchor.MiddleLeft, Color.white, 120, true);
+
+            Button upgrade = AddButton(row, "SlotUpgrade_" + slot, "UPGRADE", 26, new Color(0.36f, 0.30f, 0.12f), out _slotUpgradeLabels[index]);
+            upgrade.GetComponent<LayoutElement>().preferredWidth = 320;
+            upgrade.GetComponent<LayoutElement>().flexibleWidth = 0f;
+            EquipmentSlotType captured = slot;
+            upgrade.onClick.AddListener(() => _onUpgradeSlot?.Invoke(captured));
+            _slotUpgradeButtons[index] = upgrade;
         }
 
         private void BuildPendingPanel(RectTransform content, Action onEquip, Action onDiscard)
@@ -105,14 +128,12 @@ namespace IdleRacer.Racing.Visuals
             _goldText.text = "Gold: " + game.Gold;
             _wheelsText.text = "Wheels: " + game.Wheels;
 
-            string levelInfo = game.CreatorAtMaxLevel
+            _creatorText.text = game.CreatorAtMaxLevel
                 ? $"Level {game.CreatorLevel} (MAX)"
                 : $"Level {game.CreatorLevel}   XP {game.CreatorXp}/{game.CreatorXpToNextLevel}";
-            _creatorText.text = levelInfo;
             _oddsText.text = BuildOddsText(game.CurrentRarityTable);
 
-            bool canBuild = !game.HasPendingItem && game.Wheels >= 1;
-            _buildButton.interactable = canBuild;
+            _buildButton.interactable = !game.HasPendingItem && game.Wheels >= 1;
             _buildButtonLabel.text = game.Wheels >= 1 ? "BUILD ITEM (1 Wheel)" : "BUILD ITEM (No Wheels)";
 
             if (!game.IsAutoBuildUnlocked)
@@ -154,8 +175,7 @@ namespace IdleRacer.Racing.Visuals
             {
                 double dAccel = pending.AccelerationBonus - equipped.AccelerationBonus;
                 double dTop = pending.TopSpeedBonus - equipped.TopSpeedBonus;
-                sb.Append($"Equipped: {equipped.Rarity} (+{equipped.AccelerationBonus:0.##}/+{equipped.TopSpeedBonus:0.##})  " +
-                          $"Δ {Signed(dAccel)}/{Signed(dTop)}");
+                sb.Append($"Equipped: {equipped.Rarity} (+{equipped.AccelerationBonus:0.##}/+{equipped.TopSpeedBonus:0.##})  Δ {Signed(dAccel)}/{Signed(dTop)}");
             }
             _pendingText.text = sb.ToString();
         }
@@ -166,16 +186,22 @@ namespace IdleRacer.Racing.Visuals
             {
                 EquipmentSlotType slot = Slots[i];
                 EquipmentItem item = game.GetEquipped(slot);
-                if (item == null)
-                {
-                    _slotTexts[i].text = $"{SlotName(slot)}: EMPTY";
-                    _slotTexts[i].color = new Color(0.6f, 0.6f, 0.65f);
-                }
-                else
-                {
-                    _slotTexts[i].text = $"{SlotName(slot)}: {item.Rarity}  +{item.AccelerationBonus:0.##} Accel / +{item.TopSpeedBonus:0.##} Top";
-                    _slotTexts[i].color = Color.white;
-                }
+                int level = game.GetSlotLevel(slot);
+                double slotAccel = game.GetSlotAccelerationBonus(slot);
+                double slotTop = game.GetSlotTopSpeedBonus(slot);
+
+                var sb = new StringBuilder();
+                sb.AppendLine($"{SlotName(slot).ToUpperInvariant()} — LV. {level}");
+                sb.AppendLine(item == null
+                    ? "Item: EMPTY"
+                    : $"Item: {item.Rarity}  +{item.AccelerationBonus:0.##}/+{item.TopSpeedBonus:0.##}");
+                sb.Append($"Slot: +{slotAccel:0.##} Accel / +{slotTop:0.##} Top");
+                _slotInfoTexts[i].text = sb.ToString();
+
+                long cost = game.GetSlotUpgradeCost(slot);
+                bool afford = game.CanAffordSlotUpgrade(slot);
+                _slotUpgradeLabels[i].text = $"UPGRADE\n{cost} G";
+                _slotUpgradeButtons[i].interactable = afford;
             }
         }
 

@@ -136,6 +136,22 @@ Item Creator rarity odds (must sum to 100%, displayed exactly as used):
 
 All of the above are prototype-only and subject to change.
 
+## Prototype Values (Milestone 0.1D)
+
+Gold now has its first sink: permanent equipment slot upgrades.
+
+Gold sinks (v0.1D):
+- equipment slot upgrades (via `SlotUpgradeService`, reason `EquipmentSlotUpgrade`).
+
+Prototype slot-upgrade cost curve (shared across all eight slots): cost to go from level L is
+`50 * 2^(L-1)` → Level 1→2: 50, 2→3: 100, 3→4: 200, 4→5: 400, 5→6: 800, …
+
+Permanent slot progression bonus per level: +0.5 Acceleration (m/s^2), +1.0 TopSpeed (m/s).
+Slots start at Level 1 (0 bonus). These are PROTOTYPE balance values, not final.
+
+The early upgrades (50, 100) are affordable within the first Normal-1 stage wins (which grant
+50–250 Gold), giving Gold a guaranteed-progression role alongside Wheels (random loot).
+
 ---
 
 ## Monetisation

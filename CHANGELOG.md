@@ -34,3 +34,12 @@ The project follows a lightweight chronological changelog during early developme
   1-10 (pauses on unresolved items). Progression UI added to the RacePrototype scene.
 - Edit Mode tests for the incremental loop (campaign, economy, item generation, equipment,
   Item Creator, Auto Build).
+- Permanent Gold-funded equipment slot upgrades v0.1D: per-slot levels (`EquipmentSlotProgression`),
+  data-driven `SlotUpgradeConfig` curve, `SlotUpgradeService`, and slot bonuses folded into the
+  single authoritative player-stat calculation; slot-upgrade UI added to each equipment slot.
+- Local versioned save system V1: `GameSaveDataV1` DTO + `IGameSaveRepository` (domain) and
+  `LocalJsonSaveRepository` (infrastructure, atomic JSON writes under persistentDataPath), with
+  centralised save triggers, corruption/unsupported-version safe handling, and pending-item
+  persistence.
+- Offline-duration foundation (`OfflineProgress`, `LastSavedUtc`); no offline rewards yet.
+- Edit Mode tests for slot upgrades and the save system.

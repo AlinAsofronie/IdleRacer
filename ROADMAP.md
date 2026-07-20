@@ -51,8 +51,9 @@ Status:
 - 0.1A Headless race simulator — COMPLETED
 - 0.1B Visual race prototype — COMPLETED
 - 0.1C First playable incremental loop (Normal 1-1..1-10, Gold, Wheels, Item Creator,
-  8 equipment slots, rarities, Item Creator levels, Auto Build unlock) — IN PROGRESS
-  (local save deferred to a later milestone)
+  8 equipment slots, rarities, Item Creator levels, Auto Build unlock) — COMPLETED
+- 0.1D Gold slot upgrades + local save (V1) + offline-duration foundation — COMPLETED
+  (offline rewards deferred to a later milestone)
 
 ---
 

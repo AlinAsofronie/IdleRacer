@@ -19,6 +19,12 @@ namespace IdleRacer.Game.Equipment.Items
             return _equipped.TryGetValue(slot, out EquipmentItem item) ? item : null;
         }
 
+        /// <summary>All currently equipped items (for serialisation). Empty slots are omitted.</summary>
+        public IEnumerable<EquipmentItem> GetAllEquipped()
+        {
+            return _equipped.Values;
+        }
+
         /// <summary>
         /// Equips <paramref name="item"/> into its own slot, replacing only that slot. Returns the
         /// item previously in that slot (or <c>null</c>). Other slots are never affected.

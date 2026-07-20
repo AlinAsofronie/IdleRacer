@@ -3,6 +3,9 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using IdleRacer.Game.Core;
+using IdleRacer.Game.Core.SaveSystem;
+using IdleRacer.Game.Equipment;
+using IdleRacer.Game.Infrastructure;
 using IdleRacer.Racing.Simulation;
 
 namespace IdleRacer.Racing.Visuals
@@ -34,6 +37,8 @@ namespace IdleRacer.Racing.Visuals
         private const float CarZ = 0.0f;
 
         private GameController _game;
+        private IGameSaveRepository _saveRepository;
+        private TimeSpan _offlineDuration;
 
         private RaceCarView _playerView;
         private RaceCarView _opponentView;
@@ -52,7 +57,25 @@ namespace IdleRacer.Racing.Visuals
             // Keep the autoplay loop running even when the Editor/app is unfocused (idle racer).
             Application.runInBackground = true;
 
-            _game = new GameController(GameConfig.CreatePrototype());
+            GameConfig config = GameConfig.CreatePrototype();
+            _saveRepository = new LocalJsonSaveRepository(LocalJsonSaveRepository.DefaultSaveFilePath);
+            SaveLoadResult load = _saveRepository.Load();
+
+            if (load.Status == SaveLoadStatus.Loaded)
+            {
+                _game = new GameController(config, loadedData: load.Data);
+                _offlineDuration = OfflineProgress.CalculateOfflineDuration(load.Data.lastSavedUtcTicks, DateTime.UtcNow.Ticks);
+                Debug.Log($"[IdleRacer] Loaded save (v{load.Data.saveVersion}). Offline duration: {_offlineDuration} (no offline rewards in v0.1D).");
+            }
+            else
+            {
+                _game = new GameController(config);
+                _offlineDuration = TimeSpan.Zero;
+                Debug.Log($"[IdleRacer] No usable save ({load.Status}); starting a fresh player.");
+            }
+
+            // Centralised save trigger: persist after any meaningful progression change.
+            _game.StateChanged += SaveNow;
 
             ConfigureCamera();
             BuildTrack();
@@ -63,6 +86,35 @@ namespace IdleRacer.Racing.Visuals
 
             StartCoroutine(RaceLoop());
             StartCoroutine(AutoBuildLoop());
+        }
+
+        private void SaveNow()
+        {
+            if (_game != null && _saveRepository != null)
+            {
+                _saveRepository.Save(_game.CreateSaveData());
+            }
+        }
+
+        private void OnApplicationPause(bool pauseStatus)
+        {
+            if (pauseStatus)
+            {
+                SaveNow();
+            }
+        }
+
+        private void OnApplicationFocus(bool hasFocus)
+        {
+            if (!hasFocus)
+            {
+                SaveNow();
+            }
+        }
+
+        private void OnApplicationQuit()
+        {
+            SaveNow();
         }
 
         private IEnumerator RaceLoop()
@@ -155,6 +207,12 @@ namespace IdleRacer.Racing.Visuals
             _ui.Refresh(_game);
         }
 
+        private void OnUpgradeSlotPressed(EquipmentSlotType slot)
+        {
+            _game.TryUpgradeSlot(slot);
+            _ui.Refresh(_game);
+        }
+
         // ---- Scene construction ----
 
         private void ConfigureCamera()
@@ -236,7 +294,7 @@ namespace IdleRacer.Racing.Visuals
             panelRt.offsetMax = Vector2.zero;
             panelGo.GetComponent<Image>().color = new Color(0.09f, 0.09f, 0.12f, 1f);
 
-            _ui = new ProgressionUiView(panelRt, OnBuildPressed, OnToggleAutoBuild, OnEquipPressed, OnDiscardPressed);
+            _ui = new ProgressionUiView(panelRt, OnBuildPressed, OnToggleAutoBuild, OnEquipPressed, OnDiscardPressed, OnUpgradeSlotPressed);
 
             // Top race status + finish times (top area, above the panel).
             _statusText = CreateText(canvasGo.transform, "StatusText", new Vector2(0f, 0.80f), new Vector2(1f, 0.93f), string.Empty, 90, TextAnchor.MiddleCenter, Color.white);

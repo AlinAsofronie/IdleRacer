@@ -13,6 +13,9 @@ namespace IdleRacer.Game.Core.Economy
         RaceReward,
 
         /// <summary>Cost of generating an item in the Item Creator.</summary>
-        ItemGenerationCost
+        ItemGenerationCost,
+
+        /// <summary>Gold spent to permanently upgrade an equipment slot's level.</summary>
+        EquipmentSlotUpgrade
     }
 }

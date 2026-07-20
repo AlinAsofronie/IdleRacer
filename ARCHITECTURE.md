@@ -597,3 +597,47 @@ optional starting `CampaignState`, anticipating save/load in a later milestone.
 - no inventory (pending item is single-slot; DISCARD removes permanently);
 - no persistence yet; progression UI is code-built (prefab migration deferred);
 - prototype rarity/stat/stage values are not final balance.
+
+---
+
+## Permanent Slot Progression v0.1D
+
+Each of the eight equipment slots has a permanent level owned by the SLOT, never by the item
+(`EquipmentSlotProgression`; slot level is never stored on `EquipmentItem`). Gold funds
+upgrades via `SlotUpgradeService` (spends through `IEconomyService` with reason
+`EquipmentSlotUpgrade`; +1 level on success, nothing changes on insufficient Gold). The curve
+is one shared data-driven `SlotUpgradeConfig` (prototype: +0.5 Accel / +1.0 Top per level;
+cost 50 then doubling — 50, 100, 200, 400 …). All values are PROTOTYPE, not final.
+
+Final player stats now flow through the single authoritative `PlayerStatsCalculator`:
+
+Base Player Stats + Σ(slot-level bonuses) + Σ(equipped item bonuses) = Final Race Stats
+
+The next race after an upgrade automatically uses the improved stats (no duplicated math in UI).
+
+## Local Save System v1
+
+Versioned local persistence with a clean layering boundary:
+
+- Domain (`Assets/Game/Core/SaveSystem/`, pure C#): the `GameSaveDataV1` DTO (+ `EquipmentItemDto`),
+  `IGameSaveRepository`, `SaveLoadResult`/`SaveLoadStatus`, `SaveConstants.CurrentVersion`,
+  `InMemorySaveRepository` (tests), and `OfflineProgress`. `GameController` maps state ↔ DTO
+  (`CreateSaveData` / load-from-DTO constructor) and never touches the file system.
+- Infrastructure (`Assets/Game/Infrastructure/`, Unity): `LocalJsonSaveRepository` writes a small
+  versioned JSON file under `Application.persistentDataPath` using Unity `JsonUtility`. Writes go
+  to a `.tmp` file then atomically replace the primary file, so a partial write is unlikely to
+  destroy progression. No `PlayerPrefs` is used for the save.
+
+Save triggering is centralised: `GameController` raises `StateChanged` after any persistent
+change (race reward/advance, item build, equip, discard, slot upgrade, Auto Build unlock) and the
+`RacePrototypeController` persists on that event plus on application pause/focus-loss/quit — never
+per frame.
+
+Load behaviour: missing save → fresh player (from `GameConfig` defaults, single source);
+corrupted save → reported `Corrupted`, treated as fresh (no crash); newer `saveVersion` than
+supported → reported `UnsupportedVersion`, treated as fresh. The pending generated item is
+persisted so restarting the app cannot be used to reroll it for free.
+
+`LastSavedUtc` (UTC ticks) is stored; on load, `OfflineProgress.CalculateOfflineDuration`
+computes the away time (clamped to ≥ 0, optional cap). v0.1D grants NO offline rewards yet — the
+duration is only logged, as a foundation for a later milestone.

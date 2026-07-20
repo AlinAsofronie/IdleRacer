@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using IdleRacer.Game.Equipment.Generator;
 using IdleRacer.Game.Equipment.Rarities;
 using IdleRacer.Game.Progression.Campaign;
+using IdleRacer.Game.Progression.SlotUpgrades;
 
 namespace IdleRacer.Game.Core
 {
@@ -24,6 +25,12 @@ namespace IdleRacer.Game.Core
         public ItemCreatorConfig ItemCreator { get; }
         public RarityStatTable RarityStats { get; }
 
+        /// <summary>Starting level for every equipment slot (fresh player).</summary>
+        public int StartingSlotLevel { get; }
+
+        /// <summary>Shared slot-upgrade progression curve (cost + per-level bonuses).</summary>
+        public SlotUpgradeConfig SlotUpgrades { get; }
+
         public GameConfig(
             double basePlayerAcceleration,
             double basePlayerTopSpeed,
@@ -34,7 +41,9 @@ namespace IdleRacer.Game.Core
             double raceFixedTimeStep,
             CampaignDefinition campaign,
             ItemCreatorConfig itemCreator,
-            RarityStatTable rarityStats)
+            RarityStatTable rarityStats,
+            int startingSlotLevel,
+            SlotUpgradeConfig slotUpgrades)
         {
             BasePlayerAcceleration = basePlayerAcceleration;
             BasePlayerTopSpeed = basePlayerTopSpeed;
@@ -46,6 +55,8 @@ namespace IdleRacer.Game.Core
             Campaign = campaign;
             ItemCreator = itemCreator;
             RarityStats = rarityStats;
+            StartingSlotLevel = startingSlotLevel;
+            SlotUpgrades = slotUpgrades;
         }
 
         /// <summary>Builds the default prototype configuration for Milestone 0.1C.</summary>
@@ -61,7 +72,16 @@ namespace IdleRacer.Game.Core
                 raceFixedTimeStep: 0.02,
                 campaign: CreateNormalChapter1(),
                 itemCreator: CreateItemCreatorConfig(),
-                rarityStats: CreateRarityStatTable());
+                rarityStats: CreateRarityStatTable(),
+                startingSlotLevel: 1,
+                // Prototype slot curve: +0.5 accel / +1.0 top per level; cost 50 then doubling
+                // (50, 100, 200, 400, ...), affordable within the first stage wins.
+                slotUpgrades: new SlotUpgradeConfig(
+                    startingLevel: 1,
+                    accelerationBonusPerLevel: 0.5,
+                    topSpeedBonusPerLevel: 1.0,
+                    baseUpgradeCost: 50L,
+                    costGrowthFactor: 2.0));
         }
 
         // Normal 1-1 .. 1-10. Opponent stats scale up so the early stages are winnable with base
