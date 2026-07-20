@@ -21,3 +21,9 @@ The project follows a lightweight chronological changelog during early developme
   (Acceleration and TopSpeed) with fixed-timestep stepping and analytic finish-line
   interpolation, in `IdleRacer.Racing.Simulation`.
 - Edit Mode tests for the race simulation (`IdleRacer.Racing.Tests.EditMode`).
+- Race visualisation prototype v0.1B: a portrait `RacePrototype` scene and presentation
+  layer (`IdleRacer.Racing.Visuals`: `RacePrototypeController`, `RaceCarView`) that plays
+  back the authoritative simulation with placeholder cars, a READY/GO!/winner flow,
+  finish-time display, a static bottom progression placeholder, and continuous autoplay.
+- Shared pure-C# `RaceKinematics.DistanceAtTime` helper (with Edit Mode tests) so the
+  visual layer derives car positions from the same kinematic model as the simulator.

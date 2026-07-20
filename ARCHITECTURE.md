@@ -485,3 +485,52 @@ visuals will only display the `RaceSimulationResult`; visuals never determine th
 - no random events;
 - no equipment modifiers;
 - starts from rest only.
+
+---
+
+## Race Visualisation v0.1B
+
+The first presentation-layer prototype that proves the authoritative simulator can drive a
+visually satisfying race. It lives in `Assets/Game/Racing/Visuals/`
+(`IdleRacer.Racing.Visuals`, which references `IdleRacer.Racing.Simulation` and
+`UnityEngine.UI`).
+
+### Authoritative simulator vs presentation layer
+
+- The simulator (`IdleRacer.Racing.Simulation`) remains authoritative. It has no Unity
+  dependency and decides the winner and finish times.
+- The presentation layer (`RacePrototypeController`, `RaceCarView`) only *displays* a race.
+  It calls `RaceSimulator.Simulate` for a `RaceSimulationResult` and shows that result's
+  winner and finish times. Visuals never determine the outcome.
+- No authoritative race calculations live in MonoBehaviours.
+
+### How visual position is derived
+
+Car positions come from the shared pure-C# helper
+`RaceKinematics.DistanceAtTime(stats, elapsed)` (in the simulation assembly), so the same
+kinematic model (accelerate from rest, cap at TopSpeed) is used by both the simulator and
+the visuals — no duplicated formula in the visual layer. Each frame the controller converts
+distance-at-time into a normalised progress `distance / TrackDistance` (clamped to [0,1]),
+and `RaceCarView` linearly maps that to a world X between the visual start and finish lines.
+Playback runs in real time until the later of the two finish times; the faster car clamps at
+the finish line while the slower car keeps moving until it finishes.
+
+### Current prototype scene
+
+`Assets/Scenes/RacePrototype.unity` (SampleScene is untouched). It contains a Main Camera,
+a Directional Light, and a `RacePrototype` object with `RacePrototypeController`, which
+builds the rest at runtime: an orthographic camera framed for portrait (fits a fixed track
+width to any aspect), two placeholder cube cars (player = blue, opponent = red), a road, a
+start line, a bright finish line, and a Screen Space Overlay UI (READY / GO! / winner
+status, both finish times, and a static bottom placeholder panel labelled
+"Progression UI Coming Next" occupying the lower ~55%). The race auto-runs, shows the
+result, and restarts in a continuous loop with no user input.
+
+### Current limitations (v0.1B)
+
+- placeholder primitive visuals only (no art);
+- runtime-built scene contents (only camera/light/controller are authored in the scene);
+- fixed camera, straight track, two cars;
+- prototype-only race values (not game balance);
+- no input, economy, progression, equipment, skills, or audio;
+- bottom panel is a static placeholder (no real progression UI yet).
