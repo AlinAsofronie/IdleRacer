@@ -1,0 +1,1117 @@
+---
+description: Core architecture, coding, gameplay and AI development rules for IdleRacer
+alwaysApply: true
+---
+
+# IdleRacer — AI Development Rules
+
+## Core Principle
+
+IdleRacer is a production Unity game intended primarily for iOS, with future support for Android and Web wherever practical.
+
+The game is a mobile-first incremental / idle racing RPG.
+
+The player does not directly drive the car during the main gameplay loop.
+
+The car races automatically while the player manages:
+- equipment,
+- item generation,
+- upgrades,
+- skills,
+- companions,
+- trainers,
+- refinement,
+- dungeons,
+- prestige,
+- race disciplines,
+- PvP Arena,
+- collections,
+- long-term progression.
+
+All code must be maintainable, modular, testable, data-driven and suitable for a long-lived game.
+
+Never optimise for completing a task quickly at the expense of architecture.
+
+---
+
+## Technology
+
+- Unity 6.
+- C# for game logic.
+- URP.
+- iOS is the primary deployment target.
+- Future Android and Web support should remain possible.
+- Avoid platform-specific logic in core gameplay systems.
+- Unity Gaming Services is the preferred backend direction when online systems are introduced.
+- Do not add third-party packages without explicit approval.
+
+---
+
+## Game Philosophy
+
+The core loop must remain simple:
+
+Auto Race
+→ Earn Gold and Wheels
+→ Generate Equipment
+→ Upgrade Car
+→ Progress Campaign
+→ Unlock Systems
+→ Reach Progression Wall
+→ Improve Build
+→ Progress Further
+→ Prestige
+→ Repeat Faster and Deeper
+
+The player should always have:
+- something happening now,
+- something to upgrade soon,
+- a medium-term unlock,
+- a long-term objective.
+
+The top portion of the screen should remain visually active with racing.
+
+The bottom portion of the screen should provide progression interaction and decisions.
+
+The game should avoid requiring steering, braking or manual driving input in the core loop.
+
+Skills may support:
+- full auto activation,
+- optional manual activation.
+
+Nitrous and normal race behaviour should be automated unless a future explicitly approved mode changes this.
+
+---
+
+## Architecture
+
+Gameplay logic and visual presentation must remain separate.
+
+The race simulation must never depend on:
+- animations,
+- particle systems,
+- cameras,
+- visual GameObjects,
+- UI elements.
+
+Race results must be calculable from input data.
+
+Core systems should be usable without loading a Unity scene wherever practical.
+
+Prefer plain C# classes for domain logic.
+
+Use MonoBehaviour only when Unity lifecycle, scene behaviour or rendering integration is genuinely required.
+
+Use ScriptableObjects for static content/configuration where appropriate.
+
+Do not use MonoBehaviour as a general-purpose data container.
+
+Do not create a monolithic GameManager.
+
+Avoid global mutable state.
+
+Avoid singleton managers unless explicitly approved.
+
+Prefer dependency injection through constructors, interfaces or explicit composition where practical.
+
+---
+
+## System Boundaries
+
+Keep these systems conceptually independent:
+
+- Race Simulation
+- Race Visualisation
+- Campaign Progression
+- Race Disciplines
+- Equipment
+- Item Generation
+- Auto Build
+- Equipment Refinement
+- Equipment Slot Upgrades
+- Currency / Economy
+- Skills
+- Companions
+- Trainers
+- Dungeons
+- Dynamic Events
+- Collections
+- Prestige / Awakening
+- Prestige Tree
+- PvP Arena
+- Save System
+- Offline Progression
+- Backend Services
+- UI
+
+Systems may communicate through:
+- clearly defined interfaces,
+- immutable data contracts,
+- events,
+- application services.
+
+Do not create hidden dependencies.
+
+---
+
+## Race Simulation
+
+The race simulation is the authoritative source of race outcomes.
+
+Visuals represent the simulation result.
+
+Visual animations must never determine the winner.
+
+The simulator should eventually support:
+
+- Main Campaign
+- Drag Racing
+- Circuit Racing
+- Dungeon Races
+- Dynamic Event Races
+- PvP Arena Races
+
+using the same underlying race simulation architecture.
+
+PvP must support asynchronous opponent build snapshots.
+
+Race simulations should support deterministic random seeds when randomness is required.
+
+The simulation must eventually be able to account for:
+- acceleration,
+- top speed,
+- grip,
+- cornering,
+- braking,
+- gear shifts,
+- nitrous,
+- skills,
+- track type,
+- track length,
+- corners,
+- build modifiers,
+- prestige modifiers,
+- companion effects,
+- trainer effects.
+
+Do not add all of these at once.
+
+Build the simulation incrementally.
+
+---
+
+## Campaign Structure
+
+The campaign is fully autoplay.
+
+The initial structure is:
+
+Normal:
+- 1-1 to 1-10
+- 2-1 to 2-20
+- 3-1 to 3-30
+
+Hard:
+- 1-1 to 1-10
+- 2-1 to 2-20
+- 3-1 to 3-30
+
+Hell:
+- 1-1 to 1-10
+- 2-1 to 2-20
+- 3-1 to 3-30
+
+Additional difficulties may be added later.
+
+When the player wins:
+- progress automatically to the next stage.
+
+When the player loses:
+- remain on the same stage,
+- automatically retry.
+
+Campaign progression must unlock systems gradually.
+
+Do not expose all systems at the start.
+
+---
+
+## Race Disciplines
+
+Separate progression systems should eventually exist for:
+
+### Drag Racing
+Rewards:
+- acceleration,
+- launch,
+- top speed,
+- gear shifting,
+- nitrous.
+
+### Circuit Racing
+Rewards:
+- grip,
+- braking,
+- cornering,
+- acceleration out of corners.
+
+Future race disciplines may include:
+- rally,
+- endurance,
+- weather-specific racing.
+
+Do not implement future disciplines without approval.
+
+---
+
+## Currencies
+
+Core currencies currently planned:
+
+### Gold
+Purpose:
+- permanent equipment slot upgrades.
+
+Gold should not normally be invested directly into temporary equipment items.
+
+### Wheels
+Purpose:
+- one Wheel per item-generation attempt by default.
+
+Wheels can be earned from:
+- active racing,
+- stage progression,
+- race completion,
+- bosses,
+- events,
+- offline progression.
+
+### Refinement Currency
+Purpose:
+- refine specific equipment items with stars.
+
+Primary source:
+- refinement dungeon.
+
+### Prestige Currency
+Purpose:
+- permanent Prestige Tree progression.
+
+Primary source:
+- Awakening / Prestige.
+
+Do not introduce new currencies without explicit approval.
+
+Every currency transaction must go through a central economy abstraction eventually.
+
+UI must not directly modify currency.
+
+---
+
+## Equipment
+
+There are eight equipment slots.
+
+Current planned slots:
+
+- Engine
+- Turbo
+- Gearbox
+- Tyres
+- Suspension
+- ECU
+- Exhaust
+- Fuel System
+
+Slot progression and individual item progression are separate systems.
+
+Gold upgrades equipment slots permanently.
+
+Individual generated items can have:
+
+- slot type,
+- rarity,
+- base stats,
+- percentage stats,
+- affixes,
+- tags,
+- refinement stars,
+- unique identity / item ID.
+
+Do not silently destroy or replace player equipment.
+
+Items should eventually support locking.
+
+---
+
+## Item Generator
+
+The player creates equipment through an Item Creator / Part Creator system.
+
+Default cost:
+- 1 Wheel per generated item.
+
+The Item Creator has a level.
+
+Higher Item Creator levels improve rarity odds.
+
+Rarity probabilities must be data-driven.
+
+The UI must eventually show the exact real rarity probabilities.
+
+Displayed probabilities must exactly match actual generation probabilities.
+
+Never implement hidden drop-rate manipulation.
+
+Potential rarity ladder may include:
+
+- Common
+- Uncommon
+- Rare
+- Epic
+- Legendary
+- Mythic
+
+Final rarity names are subject to game design approval.
+
+Do not hard-code final probabilities yet.
+
+---
+
+## Auto Build
+
+Manual item generation exists from the start.
+
+Auto Build unlocks from campaign progression.
+
+Planned milestone behaviour:
+
+- Complete Normal 1-10 → Auto Build unlocked, 1 item per cycle
+- Complete Normal 2-20 → 2 items per cycle
+- Complete Normal 3-30 → 3 items per cycle
+- Complete Hard 1-10 → 4 items per cycle
+- Complete Hard 2-20 → 5 items per cycle
+- Complete Hard 3-30 → 6 items per cycle
+- Complete Hell 1-10 → 7 items per cycle
+- Complete Hell 2-20 → 8 items per cycle
+- Complete Hell 3-30 → potentially 10 items per cycle
+
+These values are currently design targets and must remain configuration-driven.
+
+Auto Build:
+- does not give free items,
+- still consumes Wheels,
+- must not change rarity odds,
+- only changes throughput / convenience.
+
+Future Auto Build filters may include:
+- auto-dismantle by rarity,
+- stopping on high-rarity drops,
+- review tray.
+
+Do not implement these without approval.
+
+---
+
+## Equipment Slot Upgrades
+
+Gold upgrades the slot itself.
+
+Example:
+- Engine Slot Level remains even if the equipped Engine item changes.
+
+This permanent progression prevents Gold investment from being wasted when equipment is replaced.
+
+Slot upgrade effects should be data-driven.
+
+Slot milestones should eventually provide meaningful bonuses, not only linear stat increases.
+
+Examples:
+- level 10 milestone,
+- level 25 milestone,
+- level 50 milestone,
+- level 100 mastery milestone.
+
+Final values and milestone effects must not be hard-coded without design approval.
+
+---
+
+## Refinement
+
+Refinement applies to the individual item.
+
+Current planned refinement:
+
+0 stars:
+- base stats
+
+1 star:
+- +5% all stats on that item
+
+2 stars:
+- +10%
+
+3 stars:
+- +15%
+
+4 stars:
+- +20%
+
+5 stars:
+- +25%
+
+Refinement cost should increase per star.
+
+Refinement currency primarily comes from a dedicated dungeon.
+
+Refinement values and costs must be data-driven.
+
+The game should eventually support a fair way to recover or transfer at least part of refinement investment when replacing valuable gear.
+
+Final recovery percentage is not yet locked.
+
+Do not invent it.
+
+---
+
+## Item Tags and Synergies
+
+Equipment may eventually contain tags such as:
+
+- Acceleration
+- TopSpeed
+- Turbo
+- Street
+- Circuit
+- Drag
+- Skill
+- Grip
+
+Tags may contribute to flexible synergy bonuses.
+
+Avoid rigid traditional set-only design if possible.
+
+The goal is theorycrafting and build variety.
+
+Do not implement tag synergies until the base equipment system is stable.
+
+---
+
+## Builds
+
+The game should support meaningful specialisation.
+
+Example build directions:
+
+- Acceleration
+- Top Speed
+- Nitro
+- Grip
+- Circuit
+- Skill-focused
+- Hybrid
+
+A player should not be able to maximise every stat equally.
+
+Trade-offs are desirable.
+
+Example:
+- high acceleration may come at the cost of top speed,
+- high top speed may come at the cost of launch performance.
+
+These trade-offs should be implemented through data-driven modifiers rather than scattered conditional code.
+
+---
+
+## Skills
+
+Skills may activate automatically.
+
+The player may optionally choose manual activation for supported skills.
+
+Skills should not be required to make basic campaign autoplay function.
+
+Skills may eventually:
+- modify acceleration,
+- modify speed,
+- generate nitrous,
+- activate temporary buffs,
+- interact with race states.
+
+Do not implement skills until the core race simulation and equipment loop are working.
+
+---
+
+## Companions
+
+Companions may appear visually during races and provide passive or triggered effects.
+
+Examples may include:
+- drone,
+- support vehicle,
+- motorbike,
+- pursuit car.
+
+Companions should be data-driven.
+
+Do not tightly couple companion logic to race visuals.
+
+---
+
+## Trainers
+
+Trainers provide passive strategic bonuses.
+
+Players may eventually equip a limited number.
+
+Trainer effects should use the same central modifier architecture as other bonuses.
+
+Do not create unique hard-coded stat paths for each trainer.
+
+---
+
+## Dungeons
+
+Dungeons are limited-attempt activities.
+
+Current design direction:
+- approximately 2 free attempts per day for relevant dungeons.
+
+Different dungeons may reward:
+- Refinement Currency
+- Skill resources
+- Companion resources
+- Trainer resources
+- Gold
+- Wheels
+
+Each dungeon should use racing gameplay rather than being a static claim screen.
+
+Daily attempt limits and rewards must be configuration-driven.
+
+---
+
+## Dynamic Race Events
+
+Campaign autoplay should eventually include unexpected events to reduce repetition.
+
+Possible events:
+
+- Rival Challenger
+- Parts Truck
+- Golden Car
+- Police Chase
+- Sudden Rain
+- Special Boss
+
+These should:
+- remain automated,
+- visually change the race,
+- provide bonus rewards,
+- break repetition.
+
+Do not implement dynamic events until the core campaign loop works.
+
+---
+
+## PvP Arena
+
+PvP is asynchronous.
+
+It is not real-time multiplayer.
+
+Players race AI-controlled snapshots of other players' builds.
+
+A PvP snapshot may eventually contain:
+
+- car,
+- equipment,
+- refinement,
+- slot levels,
+- skills,
+- companions,
+- trainers,
+- Prestige Tree effects,
+- calculated stats,
+- Arena rating.
+
+PvP must be designed for server validation.
+
+Never trust client-submitted:
+- race result,
+- rating changes,
+- leaderboard score,
+- currency rewards.
+
+Arena should have:
+- real-time or frequently updated ladder,
+- rating,
+- ranks,
+- seasonal rewards.
+
+Possible ranks:
+- Bronze
+- Silver
+- Gold
+- Platinum
+- Diamond
+- Master
+- Grandmaster
+- Legend
+
+Exact final ranks are subject to approval.
+
+Players may eventually maintain:
+- Drag loadout,
+- Circuit loadout,
+- Balanced loadout,
+- PvP Defence loadout.
+
+Do not implement PvP until backend architecture is introduced.
+
+---
+
+## Prestige / Awakening
+
+Prestige unlocks after a major progression milestone.
+
+Current target:
+- completion of Hard 3-30.
+
+Once unlocked:
+- Prestige remains available,
+- the player chooses when to Prestige,
+- Prestige is never forced.
+
+Prestige should award Prestige Currency based on how far the player has progressed.
+
+Prestige must have a preview showing:
+- what resets,
+- what is kept,
+- exact Prestige Currency earned.
+
+Prestige must require explicit confirmation.
+
+Do not finalise reset rules without explicit game design approval.
+
+Current likely direction:
+
+Potentially reset:
+- Campaign progress
+- Gold
+- Equipment Slot Levels
+- Current Wheels
+
+Potentially keep:
+- Equipment
+- Refinement
+- Skills
+- Companions
+- Trainers
+- Item Creator Level
+- Prestige Tree
+- Collections
+
+These are not final.
+
+Do not implement reset behaviour until explicitly approved.
+
+---
+
+## Prestige Tree
+
+Prestige Currency is spent on a large interconnected passive tree.
+
+The design philosophy is inspired by deep ARPG passive trees, but must remain original.
+
+The tree should support:
+- many paths,
+- cross-path builds,
+- small passive nodes,
+- major nodes,
+- build-changing keystones.
+
+Example branches:
+- Acceleration
+- Top Speed
+- Nitro
+- Grip
+- Equipment
+- Skills
+- Economy
+- Circuit
+- Drag
+
+Keystones should create meaningful trade-offs.
+
+Example:
++ large acceleration
+- lower maximum speed
+
+Do not hard-code keystone logic throughout gameplay systems.
+
+Prestige bonuses must use central modifier structures.
+
+---
+
+## Temporary Prestige-Run Traits
+
+Future design may include temporary Driver Traits selected during a Prestige run.
+
+These reset on the next Prestige.
+
+Example directions:
+- Launch Specialist
+- Nitro Maniac
+- Corner King
+
+These provide run-to-run variation.
+
+Do not implement until explicitly approved.
+
+---
+
+## Post-Prestige Progression
+
+Prestige should make earlier content dramatically faster.
+
+Potential features:
+- domination victories,
+- automatic stage skipping,
+- multi-stage skipping based on victory margin.
+
+The player should visibly feel stronger on repeat runs.
+
+Do not make the player manually grind identical early content at the same speed forever.
+
+---
+
+## Offline Progression
+
+The player should earn resources while offline.
+
+Likely rewards:
+- Gold
+- Wheels
+
+Offline progress should be based on validated progression state.
+
+Offline reward caps should be configuration-driven.
+
+Do not trust device time for valuable online/competitive rewards when server time becomes available.
+
+Offline progress must eventually be testable independently from UI.
+
+---
+
+## Collections
+
+The game may include collection progress for:
+
+- cars,
+- equipment,
+- companions,
+- skills,
+- bosses,
+- tracks.
+
+Collections may provide small permanent bonuses.
+
+Collection bonuses must remain secondary to main progression.
+
+---
+
+## Save Data
+
+Every save schema must have a version.
+
+Never remove or rename saved-data fields without migration handling.
+
+Save migrations must be implemented when schema changes.
+
+Core saved data should eventually include:
+
+- currencies,
+- campaign progress,
+- equipment inventory,
+- equipped items,
+- equipment slot levels,
+- Item Creator level,
+- refinement,
+- unlocks,
+- skills,
+- companions,
+- trainers,
+- Prestige Tree,
+- collections,
+- offline timestamp.
+
+Do not introduce cloud save yet unless explicitly instructed.
+
+Start with clean local save architecture when save implementation begins.
+
+---
+
+## Data-Driven Design
+
+Never hard-code progression values directly into gameplay classes when they belong to configuration.
+
+Examples:
+
+- stage difficulty,
+- enemy stats,
+- Gold rewards,
+- Wheel rewards,
+- Item Creator rarity odds,
+- Auto Build unlocks,
+- refinement costs,
+- slot upgrade costs,
+- Prestige rewards,
+- Prestige Tree costs,
+- dungeon rewards,
+- track modifiers,
+- offline caps.
+
+Game balance must be adjustable without rewriting core logic.
+
+---
+
+## Modifier Architecture
+
+All systems that modify car performance should eventually use a shared modifier pipeline.
+
+Sources may include:
+
+- equipment,
+- slot upgrades,
+- refinement,
+- item affixes,
+- item tags,
+- skills,
+- companions,
+- trainers,
+- Prestige Tree,
+- temporary traits,
+- dungeon modifiers,
+- track modifiers.
+
+Do not create separate ad hoc calculations for every feature.
+
+Prefer:
+Base Stats
+→ Flat Modifiers
+→ Additive Percentage Modifiers
+→ Multiplicative Modifiers
+→ Conditional Modifiers
+
+The exact mathematical formula must be documented before implementation.
+
+---
+
+## Economy
+
+Currency changes must eventually pass through a central Economy Service.
+
+Never directly modify player currency from UI code.
+
+Every currency transaction should record:
+
+- currency type,
+- amount,
+- source or reason.
+
+Examples:
+- RaceReward
+- StageFirstClear
+- OfflineReward
+- ItemGenerationCost
+- SlotUpgradeCost
+- DungeonReward
+- PrestigeReward
+
+This makes balancing and debugging possible.
+
+---
+
+## UI
+
+UI must not contain business logic.
+
+Buttons call services, commands or application-layer methods.
+
+UI reads state and displays results.
+
+The intended core screen layout is:
+
+Top approximately 40–50%:
+- live race gameplay.
+
+Bottom approximately 50–60%:
+- progression UI,
+- Item Creator,
+- equipment,
+- upgrades,
+- navigation.
+
+The race should continue visually while the player interacts with lower-screen progression systems wherever practical.
+
+UI must support:
+- different iPhone screen sizes,
+- safe areas,
+- portrait orientation as the current intended direction unless explicitly changed.
+
+Avoid fixed pixel positioning when responsive layout can be used.
+
+---
+
+## Code Quality
+
+Use clear, descriptive naming.
+
+Prefer composition over deep inheritance.
+
+Avoid unnecessary abstractions.
+
+Follow SOLID principles where they provide real practical value.
+
+Methods should have one clear responsibility.
+
+Avoid classes larger than approximately 500 lines.
+
+Refactor before systems become monolithic.
+
+Avoid duplicated logic.
+
+Public APIs should have XML documentation when behaviour is not obvious.
+
+Use nullable awareness where practical.
+
+Handle errors explicitly.
+
+Never silently swallow exceptions.
+
+---
+
+## Cursor Behaviour
+
+Before implementing any feature:
+
+1. Inspect the relevant existing architecture.
+2. Read GAME_DESIGN.md.
+3. Read ARCHITECTURE.md.
+4. Read any relevant system documentation.
+5. Identify files that need modification.
+6. Explain the intended change before modifying code when the task is non-trivial.
+7. Modify only files required for the task.
+8. Do not refactor unrelated code.
+9. Compile after implementation.
+10. Fix all compilation errors introduced.
+11. Run relevant tests.
+12. Report exactly what changed.
+
+Never rewrite an entire system merely to add one feature unless explicitly instructed.
+
+Never delete existing functionality without explicit approval.
+
+Never invent missing product requirements when they affect:
+- economy,
+- progression,
+- monetisation,
+- PvP,
+- prestige,
+- save data.
+
+When requirements are ambiguous:
+- preserve existing behaviour,
+- flag the ambiguity.
+
+---
+
+## Testing
+
+Core gameplay systems require automated tests.
+
+At minimum, eventually test:
+
+- race calculations,
+- race determinism,
+- item rarity generation,
+- stat modifier stacking,
+- equipment refinement,
+- slot upgrades,
+- currency transactions,
+- Prestige calculations,
+- offline progression,
+- save migrations.
+
+Random systems must support deterministic seeded testing.
+
+Bug fixes should include regression tests whenever practical.
+
+---
+
+## Performance
+
+This is a mobile-first game.
+
+Mobile battery usage and thermal performance are first-class concerns.
+
+Avoid:
+- unnecessary per-frame allocations,
+- excessive Update methods,
+- repeated scene searches,
+- unnecessary physics,
+- expensive runtime reflection.
+
+Do not use FindObjectOfType-style searches repeatedly in gameplay loops.
+
+Use object pooling for frequently spawned visual objects.
+
+Profile before performing complex optimisation.
+
+The race simulation should not require full physics simulation unless explicitly approved.
+
+---
+
+## Git
+
+Never commit directly to main automatically.
+
+Never push without explicit user approval.
+
+One feature per branch when feature development begins.
+
+Commits should be small and logically focused.
+
+Do not commit:
+- Library
+- Temp
+- Logs
+- Builds
+- generated IDE files
+- secrets.
+
+Do not modify package versions unless required by an approved task.
+
+---
+
+## Documentation
+
+Maintain these repository documents:
+
+- GAME_DESIGN.md
+- ARCHITECTURE.md
+- ECONOMY.md
+- ROADMAP.md
+- SAVE_SCHEMA.md
+- CHANGELOG.md
+
+GAME_DESIGN.md is the source of truth for intended gameplay.
+
+ARCHITECTURE.md is the source of truth for intended technical structure.
+
+Code is the source of truth for current implementation.
+
+If documentation and code conflict:
+- report the conflict,
+- do not silently guess.
