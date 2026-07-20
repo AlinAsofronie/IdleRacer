@@ -641,3 +641,71 @@ persisted so restarting the app cannot be used to reroll it for free.
 `LastSavedUtc` (UTC ticks) is stored; on load, `OfflineProgress.CalculateOfflineDuration`
 computes the away time (clamped to ≥ 0, optional cap). v0.1D grants NO offline rewards yet — the
 duration is only logged, as a foundation for a later milestone.
+
+---
+
+## Mobile UI Shell v0.2A
+
+Portrait mobile shell for the RacePrototype scene. The race remains continuously visible in the
+top ~40–45% while progression systems occupy the bottom ~55–60%.
+
+### Layout
+
+- **Race area (top):** track, player/opponent cars, stage label, READY/GO!/result + finish times.
+- **Resource bar:** persistent Gold / Wheels (and compact player Accel/Top) across all tabs.
+- **Progression shell:** one active panel at a time above a five-button bottom navigation bar.
+- **Safe area:** shell root respects `Screen.safeArea`; CanvasScaler reference is 1080×1920
+  (portrait), Match Width Or Height 0.5 — no hard-coded device pixel layouts for panel structure.
+
+### Tabs (presentation-only)
+
+Garage · Build (default) · Upgrades · Race · More
+
+Selected tab is held by `HudTabController` in the presentation layer. It is **not** written to
+`GameSaveDataV1`. On launch the shell always opens on Build. Switching tabs must not pause,
+restart, or otherwise alter race playback.
+
+### View separation
+
+Focused views under `Assets/Game/Racing/Visuals/Hud/`:
+
+- `GameHudView` — composes shell, resource bar, race overlay, panel host, navigation
+- `GaragePanelView` — equipped items + slot levels + calculated stats (read-only)
+- `BuildPanelView` — Item Creator, Auto Build, pending-item Equip/Discard with delta display
+- `UpgradesPanelView` — Gold slot upgrades (costs/affordability from `GameController`)
+- `RacePanelView` — campaign status + locked placeholders (no manual race start)
+- `MorePanelView` — locked future-system placeholders only
+- `RarityUiColors` — centralised rarity accent colours (presentation-only)
+
+`RacePrototypeController` hosts the world race visuals, save wiring, and Auto Build timer; it
+forwards UI actions to `GameController` and refreshes the HUD. UI never mutates Gold, Wheels,
+slot levels, or save files directly.
+
+---
+
+## Playtest-Ready Mobile UI v0.2B
+
+Substantial presentation overhaul of the v0.2A shell for comfortable 15–30 minute playtests.
+Gameplay systems are unchanged; this milestone is UI/UX and race presentation only.
+
+### Presentation foundations
+
+- **TextMeshPro** for all player-facing HUD text (`TextMeshProUGUI`); TMP Essential Resources
+  imported under `Assets/TextMesh Pro/` (LiberationSans SDF). No Examples & Extras.
+- **`UiTheme`** — central presentation-only colours, spacing, touch sizes, and typography tokens.
+  Rarity accents remain presentation-only (`UiTheme.Rarity` / `RarityUiColors`).
+- **`CompactNumberFormatter`** — display-only Gold/Wheels formatting (`950`, `1.2K`, `2.3M`…).
+- **`RaceWorldView`** — track, lanes, start/finish, scrolling markers, speed lines, larger cars with
+  placeholder wheel spin. Motion FX never affect simulation outcomes.
+- Portrait CanvasScaler reference remains **1080×1920**; race area ~40% / progression shell ~60%
+  (`UiTheme.ShellTopFraction`); large fixed bottom nav (`UiTheme.NavHeight`); safe-area root.
+
+### Tab presentation (still presentation-only)
+
+- **Build (default):** central Item Creator card, XP bar, large BUILD CTA, Auto Build, rarity rows,
+  prominent pending-item reveal with rarity accent + Equip/Discard and short scale/fade reveal.
+- **Garage:** PLAYER STATS card + 2×4 equipment cards (no upgrade buttons).
+- **Upgrades:** stacked Gold upgrade cards; costs/affordability from `GameController`.
+- **Race / More:** campaign progress card and locked feature cards only.
+
+Selected tab is still held by `HudTabController` and is **not** saved.

@@ -54,11 +54,17 @@ Status:
   8 equipment slots, rarities, Item Creator levels, Auto Build unlock) — COMPLETED
 - 0.1D Gold slot upgrades + local save (V1) + offline-duration foundation — COMPLETED
   (offline rewards deferred to a later milestone)
+- 0.2A Proper mobile UI shell + tab navigation — COMPLETED
+  (Garage / Build / Upgrades / Race / More; persistent race + resource bar; presentation-only tabs)
+- 0.2B Playtest-ready mobile UI/UX overhaul — COMPLETED
+  (TMP, UiTheme, compact numbers, race presentation FX, redesigned tabs/nav for portrait playtests)
 
 ---
 
 ## Milestone 0.2 — Campaign Foundation
 
+- 0.2A mobile UI shell — COMPLETED
+- 0.2B playtest-ready UI/UX — COMPLETED
 - full Normal progression
 - Hard progression
 - Hell progression
@@ -66,7 +72,6 @@ Status:
 - boss milestones
 - reward tables
 - improved race visuals
-- responsive portrait UI
 - Auto Build milestone progression
 
 ---

@@ -6,6 +6,7 @@
         "IdleRacer.Game.Domain",
         "IdleRacer.Game.Infrastructure",
         "UnityEngine.UI",
+        "Unity.TextMeshPro",
         "Unity.InputSystem"
     ],
     "includePlatforms": [],

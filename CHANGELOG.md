@@ -43,3 +43,14 @@ The project follows a lightweight chronological changelog during early developme
   persistence.
 - Offline-duration foundation (`OfflineProgress`, `LastSavedUtc`); no offline rewards yet.
 - Edit Mode tests for slot upgrades and the save system.
+- Mobile UI shell v0.2A: tabbed portrait progression shell (`GameHudView` + focused panel views)
+  with Garage / Build / Upgrades / Race / More navigation, persistent Gold/Wheels resource bar,
+  improved pending-item delta card, centralised rarity colours, and safe-area-aware layout.
+  Selected tab is presentation-only (defaults to Build; not saved). Replaces the monolithic
+  `ProgressionUiView`.
+- Edit Mode tests for `HudTabController` tab selection behaviour.
+- Playtest-ready mobile UI/UX overhaul v0.2B: TextMeshPro HUD text, central `UiTheme`,
+  `CompactNumberFormatter`, redesigned resource bar / Build / Garage / Upgrades / Race / More /
+  bottom nav, pending-item reveal animation, and `RaceWorldView` lane/marker/speed-line presentation
+  (simulation unchanged). TMP Essential Resources added under `Assets/TextMesh Pro/`.
+- Edit Mode tests for compact number formatting.

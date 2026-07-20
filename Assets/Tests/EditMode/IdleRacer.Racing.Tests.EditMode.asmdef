@@ -5,6 +5,7 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "IdleRacer.Racing.Simulation",
+        "IdleRacer.Racing.Visuals",
         "IdleRacer.Game.Domain",
         "IdleRacer.Game.Infrastructure"
     ],
