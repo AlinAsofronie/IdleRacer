@@ -1115,3 +1115,20 @@ Code is the source of truth for current implementation.
 If documentation and code conflict:
 - report the conflict,
 - do not silently guess.
+
+---
+
+## MCP Usage
+
+- Use Unity MCP when inspecting or modifying Unity Editor state.
+- Before making Unity Editor changes through MCP, inspect the current scene/project state first.
+- Never delete scenes, GameObjects, prefabs, assets or components through MCP without explicit approval.
+- Prefer small, reversible Unity Editor changes.
+- After Unity MCP modifications, check the Unity Console for compilation errors.
+- Do not use Unity MCP to bypass the architectural rules of this project.
+- Unity MCP may create presentation-layer objects but core domain logic must remain properly structured in C#.
+- Use Context7 when implementing against external libraries, Unity packages, Unity Gaming Services, or APIs whose current syntax may have changed.
+- Prefer official/current documentation retrieved through Context7.
+- GitHub MCP is currently deferred. Use standard Git CLI operations unless GitHub MCP is explicitly added later.
+- Never expose secrets through MCP tools.
+- Treat all destructive MCP operations as requiring explicit approval.
